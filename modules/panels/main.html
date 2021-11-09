@@ -1,0 +1,59 @@
+<div id=D__ID>
+    <div id=panel__ID>
+        <ul>
+            <li><a href="?/all">All</a></li>
+        </ul>
+    </div>
+    <script>
+        function F__ID(){
+            //--------------------------------------------------------
+            $('#panel__ID').css('min-height',$vm.min_height);
+            //--------------------------------------------------------
+            $('#D__ID a').on('click',function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                var module_name=$(this).attr('href').replace('?\/','');
+                if(module_name!="") $vm.show_module(module_name,{})
+            })
+            //---------------------------------------------------------------
+        }
+    </script>
+    <style>
+        #D__ID{
+            height:100%;
+            background-color: #fff;
+        }
+        #panel__ID{
+            padding:50px 100px;
+        }
+
+        #panel__ID li a{
+            color:#555;
+            text-decoration: none;
+            margin-right:20px;
+        }
+        #panel__ID li i{
+            color:#ccc;
+            font-size:80%;
+        }
+        
+        #_panel__ID li a:link{
+            color:#555;
+        }
+        #panel__ID li a:visited{
+            color:#555;
+        }
+        #panel__ID li a:hover{
+            color:red;
+        }
+        #panel__ID li a:hover i{
+            color:red;
+        }
+
+        @media screen and (max-width: 1200px) {
+            #panel__ID{
+                padding:10px 10px;
+            }
+        }
+    </style>
+</div>

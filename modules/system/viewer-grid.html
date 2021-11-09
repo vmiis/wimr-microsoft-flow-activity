@@ -1,0 +1,220 @@
+<div id=D__ID>
+	<div id=toolbar__ID class="navbar navbar-default">
+	    	<div>
+				<button id=export__ID type=button class="btn btn-secondary" title='Export' style='margin-right:30px'>Export</button>
+                <span id=name__ID style='margin-right:50px'></span> Total Number of records: <span id=total__ID></span>
+			</div>
+    </div>
+    <div>
+        <table id="grid__ID"></table>
+    </div>
+    <script>
+        function F__ID(){
+            //-------------------------------------------------
+            var m=$vm.module_list['__MODULE__'];
+            //-------------------------------------------------
+            var name="";
+            var headers=[];
+            var ps=[];
+            var tp=[];                
+            var uid=[];                
+            var records=[];
+            //-------------------------------------------------
+            $('#export__ID').on('click',function(){
+                if(records!=[]) $vm.download_csv(name+".csv",records);
+            })
+            //-------------------------------------------------
+            $('#D__ID').on('load',function(){
+                var json_data=m.input.json_data;
+                var array=m.input.array;
+                var columns=m.input.columns;
+                var ID1=m.input.ID1;
+                var ID2=m.input.ID2;
+                var ID3=m.input.ID3;
+                name=m.input.name;
+                $('#name__ID').text(name);
+                headers=[];
+                ps=[];                
+                tp=[];
+                uid=[];                
+                records=[];                
+                try{
+                    var rows;
+                    var hh=array.split('.');
+                    if(hh.length==1) rows=json_data[array];
+                    else{
+                        rows=json_data;
+                        for(var h=0;h<hh.length;h++){
+                            rows=rows[hh[h]];
+                        }
+                    }
+                    var aa=columns.split('\n');
+                    for(var i=0; i<aa.length;i++){
+                        aa[i]=aa[i].trim();
+                        if(aa[i]!=""){
+                            var bb=aa[i].split('|');
+                            for(var k=0;k<bb.length;k++) bb[k]=bb[k].trim();
+                            if(bb[0].length>1){
+                                var nm=bb[0];
+                                var pp=bb[1];
+                                headers.push(nm);
+                                ps.push(pp.replace('\r',''));
+                                if(bb.length==2){
+                                    tp.push('');
+                                    uid.push('');
+                                }
+                                else if(bb.length==3){
+                                    tp.push(bb[2].replace('\r',''));
+                                    uid.push('');
+                                }
+                                else if(bb.length==4) {
+                                    tp.push(bb[2].replace('\r','')); 
+                                    uid.push(bb[3].replace('\r','')); 
+                                }     
+                                else{
+                                    tp.push('');
+                                    uid.push('');
+                                }
+                            }
+                        }
+                    }
+                    for(var i=0;i<rows.length;i++){
+                        var record={};
+                        for(var j=0;j<headers.length;j++){
+                            var bb=ps[j].split('.');
+                            if(ps[j].indexOf('@')!=-1) bb=[ps[j]];  //ignore '.', bb contains only one element
+                            var c=rows[i];
+                            for(var k=0;k<bb.length;k++){
+                                if(c==undefined || c==null) break;
+                                if(bb[k]=='[0]') c=c[0];
+                                else c=c[bb[k]];
+                            }
+                            if(c==null) c="";
+                            var type=tp[j].split(' ')[0];
+                            if(type=='DATE') c=c.substr(0,10);
+                            if(type=='TIME') c=c.substr(11,5);
+                            if(type=='DOLLAR') c="$"+c;
+                            if(type=='LINK') c="<a target=_blank href="+c+">"+c+"</a>";
+                            if(type=='IMAGE') c="<img src="+encodeURI(c)+" style='width:"+tp[j].split(' ')[1]+"px;height:auto'></img>";
+                            if(type=='ON'){
+                                var s="";
+                                if(c=='on') s='<i style="color:green;padding-left:10px;cursor:pointer" class="fas fa-check"></i>';
+                                c=s;
+                            }
+                            /*
+                            if(tp[j].substr(0,4)=="LEN_"){
+                                var len=tp[j].split('_').pop();
+                                len=parseInt(len);
+                                c=c.substr(0,len)+"...";
+                            }
+                            */
+                            record[headers[j]]=c;
+                        }
+                        records.push(record);
+                    }
+                }
+                catch(e){
+                    alert(e);
+                    return;
+                }
+                //console.log(tp)
+                var txt="<tr><th></th><th></th>";
+                var N=headers.length;
+                for(var i=0;i<N;i++){
+                    txt+="<th>"+headers[i]+"</th>";
+                }
+                txt+="</tr>"
+                for(var i=0;i<records.length;i++){
+                    txt+="<tr><td>"+(i+1)+"</td><td><i style='cursor:pointer' class='fa fa-pencil-square-o' i="+i+"></i></td>"
+                    for(var j=0;j<N;j++){
+                            if(tp[j]=='DOLLAR') txt+="<td style='text-align:right'>"+records[i][headers[j]]+"</td>";
+                            else if(tp[j]=='WRAP') txt+="<td style='white-space: break-spaces'>"+records[i][headers[j]]+"</td>";
+                            else if(tp[j]=='MQ') txt+="<td><u style='cursor:pointer' uid="+uid[j]+" mq_id="+records[i][headers[j]]+">"+headers[j]+"</u></td>";
+                            else if(tp[j].substr(0,4)=="LEN_"){
+                                var len=tp[j].split('_').pop();
+                                len=parseInt(len);
+                                var c=records[i][headers[j]].substr(0,len)+"...";
+                                txt+="<td>"+c+"</td>";
+                            }
+                            else if(tp[j]=='webUrl'){
+                                txt+="<td><a target=_black style='text-decoration: underline;color:black' href='"+rows[i]['webUrl']+"'>"+records[i][headers[j]]+"</a></td>";
+                            }
+                            else txt+="<td>"+records[i][headers[j]]+"</td>";
+                    }
+                    txt+="</tr>"
+                }
+                $('#grid__ID').html(txt);
+                $('#grid__ID').find('i').on('click',function(){
+                    i=$(this).attr('i');
+                    $vm.show_module('jsonv',{json_data:rows[i]})
+                });
+                $('#total__ID').text(records.length);
+
+                //--------------------------------------------------------
+                $('#grid__ID u').on('click',function(e){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var uid=$(this).attr('uid');
+                    var mq_id=$(this).attr('mq_id');
+                    
+                    var m_name='__MODULE__'
+                    if(m_name=="gridv") ID1=mq_id
+                    else if(m_name=="gridv2") ID2=mq_id;
+                    if(mq_id!=undefined) $vm.microsoft_query(parseInt(uid),ID1,ID2,ID3);
+                })
+                //--------------------------------------------------------
+            })
+            //-------------------------------------------------
+        }
+    </script>
+    <style>
+        #D__ID{
+            height:100%;
+            background-color:#fff;
+        }
+
+        #toolbar__ID{
+            background-color:#ccc;
+            padding:5px 10px;
+            margin-bottom:0px;
+            overflow:hidden
+        }
+        #D__ID table{
+            font-size:13px;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        #grid__ID{
+            border-collapse: collapse;
+            border-spacing: 0;
+            margin: 0;
+            border-width: 0;
+        }
+        #grid__ID th{
+            font-weight: bold;
+            background-color:#EEE;
+            padding:5px;
+            border: 1px solid #CCC;
+        }
+        #grid__ID td{
+            font-weight: 300;
+            /*background-color:#FFF;*/
+            padding:3px;
+            border: 1px solid #CCC;
+            vertical-align: top;
+            white-space: pre;
+            background-color: white;
+        }
+
+        #grid__ID tr:hover { 
+            background-color:#EEE; 
+        }        
+        
+        #grid__ID tr td:first-child{
+            padding-left:10px;
+            padding-right:10px;
+            background-color:#EEE;
+        }
+
+
+    </style>
+</div>

@@ -1,0 +1,95 @@
+<div id=D__ID>
+    <div>
+        <pre id="json_renderer__ID"></pre>
+    </div>
+    <script>
+        function F__ID(){
+            var renderJson=function(input) {
+                var options = {
+                    collapsed: true,
+                    rootCollapsable: false,
+                    /*
+                    withQuotes: $('#with-quotes').is(':checked'),
+                    withLinks: $('#with-links').is(':checked')
+                    */
+                };
+                $('#json_renderer__ID').jsonViewer(input, options);
+            }
+            var m=$vm.module_list['__MODULE__'];
+            $('#D__ID').on('load',function(){
+                if(m.input.json_data!=undefined){
+                    renderJson(m.input.json_data)
+                }
+                else if(m.input.record.Data!=undefined){
+                    renderJson(m.input.record.Data)
+                }
+            })
+        }
+    </script>
+    <style>
+        #D__ID{
+            height:100%;
+            color:#fff;
+            background-color:#fff;
+            padding:20px;
+        }
+
+        /* Root element */
+        #D__ID .json-document {
+            padding: 1em 2em;
+        }
+
+        /* Syntax highlighting for JSON objects */
+        #D__ID ul.json-dict, #D__ID ol.json-array {
+            list-style-type: none;
+            margin: 0 0 0 1px;
+            border-left: 1px dotted #ccc;
+            padding-left: 2em;
+        }
+        #D__ID .json-string {
+            color: #0B7500;
+        }
+        #D__ID .json-literal {
+            color: #1A01CC;
+            font-weight: bold;
+        }
+
+        /* Toggle button */
+        #D__ID a.json-toggle {
+            position: relative;
+            color: inherit;
+            text-decoration: none;
+        }
+        #D__ID a.json-toggle:focus {
+            outline: none;
+        }
+        #D__ID a.json-toggle:before {
+            font-size: 1.1em;
+            color: #c0c0c0;
+            content: "\25BC"; /* down arrow */
+            position: absolute;
+            display: inline-block;
+            width: 1em;
+            text-align: center;
+            line-height: 1em;
+            left: -1.2em;
+        }
+        #D__ID a.json-toggle:hover:before {
+            color: #aaa;
+        }
+        #D__ID a.json-toggle.collapsed:before {
+            /* Use rotated down arrow, prevents right arrow appearing smaller than down arrow in some browsers */
+            transform: rotate(-90deg);
+        }
+
+        /* Collapsable placeholder links */
+        #D__ID a.json-placeholder {
+            color: #aaa;
+            padding: 0 1em;
+            text-decoration: none;
+        }
+        #D__ID a.json-placeholder:hover {
+            text-decoration: underline;
+        }
+    </style>
+</div>

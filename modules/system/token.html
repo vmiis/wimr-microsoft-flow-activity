@@ -1,0 +1,186 @@
+<div id=D__ID>
+    <script>
+        function F__ID(){
+            //-------------------------------------------------------------------------------------------------------
+            var process_identity=function(res,id){
+                if(res.result!=undefined && res.status=="ok"){
+                    var api_name=id.split('_')[0];
+                    var provider=id.split('_').pop();
+                    var t=JSON.parse(res.result.token.split('|')[0]);
+                    sessionStorage.setItem(api_name+" provider",provider);
+                    sessionStorage.setItem(api_name+" username",res.result.user_name);
+                    sessionStorage.setItem(api_name+" displayname",res.result.displayname);
+                    sessionStorage.setItem(api_name+" group",t.groups);
+                    sessionStorage.setItem(api_name+" token",res.result.token);
+                    //compatible old
+                    if(api_name==$vm.api_default){
+                        sessionStorage.setItem("vm_token",res.result.token);
+                        $vm.user_name=res.result.user_name;
+                        $vm.displayname=res.result.displayname;
+                    }
+                }
+            }
+            //------------------------------------          
+            $vm.request_token=function(id,cmd,code,redirect_uri,href,callback){
+                var api_name=id.split('_')[0];  //where to request
+                var session_key=id;             //where to store
+                $vm.request({api:api_name,cmd:cmd,token:code,redirect_uri:redirect_uri},function(res){
+                    if(res.status=='ok'){
+                        switch(cmd){
+                            case "exchange-microsoft-token": process_identity(res,id); callback(id); break;
+                            case "exchange-google-token":    process_identity(res,id); callback(id); break;
+                            case "exchange-facebook-token":  process_identity(res,id); callback(id); break;
+                            case "exchange-github-token":    process_identity(res,id); callback(id); break;
+                            
+                            case "exchange-mailchimp-token":
+                                sessionStorage.setItem("mailchimp oauth",JSON.stringify(res.result));
+                                var host='us3.api.mailchimp.com';
+                                $vm.request({cmd:'mailchimp-api',access_token:res.result.access_token,host:host,path:"/3.0/"},function(res){
+                                    sessionStorage.setItem("mailchimp oauth profile",res.result);
+                                    callback(id);
+                                })
+                                break;
+                            case "exchange-blackbaud-token":
+                                var expires_in=res.result.expires_in;
+                                sessionStorage.setItem("blackbaud oauth expire",new Date(new Date().getTime()+expires_in*1000).toLocaleString());
+                                sessionStorage.setItem("blackbaud oauth",JSON.stringify(res.result));
+                                callback(id);
+                                break;
+                            case "exchange-intuit-token":
+                                res.result.href=href;
+                                var expires_in=res.result.a.expires_in;
+                                sessionStorage.setItem("intuit oauth expire",new Date(new Date().getTime()+expires_in*1000).toLocaleString());
+                                sessionStorage.setItem("intuit oauth",JSON.stringify(res.result));
+                                callback(id);
+                                break;
+                            case "require-google-token":   
+                                var expires_in=res.result.a.expires_in;
+                                sessionStorage.setItem(id+" oauth expire",new Date(new Date().getTime()+expires_in*1000).toLocaleString());
+                                sessionStorage.setItem(id+" oauth",JSON.stringify(res.result));
+                                callback(id);
+                                break;
+                            case "exchange-microsoft2-token":
+                                var expires_in=res.result.a.expires_in;
+                                sessionStorage.setItem(session_key+" oauth expire",new Date(new Date().getTime()+expires_in*1000).toLocaleString());
+                                sessionStorage.setItem(session_key+" oauth",JSON.stringify(res.result));
+                                callback(id);
+                                break;
+                            case "exchange-docusign-token":
+                                var expires_in=res.result.expires_in;
+                                sessionStorage.setItem("docusign oauth expire",new Date(new Date().getTime()+expires_in*1000).toLocaleString());
+                                sessionStorage.setItem("docusign oauth",JSON.stringify(res.result));
+                                var host='account-d.docusign.com';
+                                $vm.request({cmd:'docusign-api',access_token:res.result.access_token,host:host,path:"/oauth/userinfo"},function(res){
+                                    sessionStorage.setItem("docusign oauth profile",res.result);
+                                    callback(id);
+                                })
+                                break;
+                        }
+                    }
+                })
+            }
+            //------------------------------------
+            $vm.get_microsoft_token=function(host, callback){
+                var t;
+                var scope=""
+                var session_key="";
+                if(host=='woolcock.crm6.dynamics.com'){
+                    t=sessionStorage.getItem("wapp_woolcock-microsoft-dynamics oauth");
+                    session_key="wapp_woolcock-microsoft-dynamics";
+                    scope="https://woolcockdev.crm6.dynamics.com/user_impersonation https://woolcockdev.crm6.dynamics.com/.default offline_access";
+                }
+                else{
+                    t=sessionStorage.getItem("wapp_microsoft-graph oauth");
+                    session_key="wapp_microsoft-graph";
+                    scope="Sites.Read.All offline_access";
+                }
+                if(t==null){
+                    alert("You haven't login!");
+                    callback('');
+                    return "";
+                }
+                t=JSON.parse(t);
+                var access_token=t.a.access_token;
+                var dt=$vm.jwt_decode(access_token);
+                var exp=dt.exp;
+                if(Date.now() >= exp * 1000){
+                    //--------------------------------------------
+                    var refresh_token=t.a.refresh_token;
+                    var mhost="login.microsoftonline.com";
+                    var path="/common/oauth2/v2.0/token";
+                    var scope=""
+                    $vm.request({api:"wapp",cmd:"refresh-microsoft-token",token:refresh_token,host:mhost,path:path,scope:scope},function(res){
+                        var expires_in=res.result.a.expires_in;
+                        var expire=new Date(new Date().getTime()+expires_in*1000).toLocaleString();
+                        sessionStorage.setItem(session_key+" oauth expire",expire);
+                        sessionStorage.setItem(session_key+" oauth",JSON.stringify(res.result));
+                        $('#microsoft2_expire').text("Expiry time: "+expire);
+                        callback(res.result.a.access_token);
+                    })
+                    //--------------------------------------------
+                    return;
+                }
+                callback(access_token);
+            }
+            //-------------------------------------------------------------------------------------------------------
+            $vm.get_intuit_token=function(callback){
+                var t=sessionStorage.getItem("intuit oauth");
+                if(t==null){
+                    alert("You haven't login!");
+                    return "";
+                }
+                t=JSON.parse(t);
+                var realmId=t.href.split("ealmId=").pop().split('&')[0];
+                
+                var ttt=sessionStorage.getItem("intuit oauth expire");
+                var dt=new Date(ttt).getTime()-new Date().getTime();
+                if(dt<0){
+                    var refresh_token=t.a.refresh_token;
+                    $vm.request({api:"wapp",cmd:"refresh-intuit-token",token:refresh_token},function(res){
+                        var expires_in=res.result.a.expires_in;
+                        var expire=new Date(new Date().getTime()+expires_in*1000).toLocaleString();
+                        sessionStorage.setItem("intuit oauth expire",expire);
+                        t.a=res.result.a;
+                        sessionStorage.setItem("intuit oauth",JSON.stringify(t));
+                        $('#intuit_expire').text("Expiry time: "+expire);
+                        callback(realmId, res.result.a.access_token);
+                    })
+                    //--------------------------------------------
+                    return;
+                }
+                callback(realmId,t.a.access_token);
+            }
+            //-------------------------------------------------------------------------------------------------------
+            $vm.get_google_firebase_token=function(callback){
+                var t=sessionStorage.getItem("wapp_google_firebase oauth");
+                if(t==null){
+                    alert("You haven't login!");
+                    return "";
+                }
+                t=JSON.parse(t);
+                
+                var ttt=sessionStorage.getItem("wapp_google_firebase oauth expire");
+                var dt=new Date(ttt).getTime()-new Date().getTime();
+                if(dt<0){
+                    alert('Expired');
+                    /*
+                    var refresh_token=t.a.refresh_token;
+                    $vm.request({api:"wapp",cmd:"refresh-intuit-token",token:refresh_token},function(res){
+                        var expires_in=res.result.a.expires_in;
+                        var expire=new Date(new Date().getTime()+expires_in*1000).toLocaleString();
+                        sessionStorage.setItem("intuit oauth expire",expire);
+                        t.a=res.result.a;
+                        sessionStorage.setItem("intuit oauth",JSON.stringify(t));
+                        $('#intuit_expire').text("Expiry time: "+expire);
+                        callback(realmId, res.result.a.access_token);
+                    })
+                    //--------------------------------------------
+                    */
+                    return;
+                }
+                callback(t.a.access_token);
+            }
+            //-------------------------------------------------------------------------------------------------------
+        }
+    </script>   
+</div>

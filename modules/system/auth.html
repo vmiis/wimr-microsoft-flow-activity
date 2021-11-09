@@ -1,0 +1,58 @@
+<div id=D__ID>
+    <script>
+        function F__ID(){
+            //--------------------------------------------------------
+            var u=window.location.origin;
+            if(u=="http://localhost:8000") u=u+"/auth.html";
+            else u=u+"/wimr-snapforms/auth.html"
+            $vm.auth_signin=function(){
+                //$vm.signin();
+                url='https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
+                url+='?client_id=3bcb40c5-fec0-4b3b-ba67-f4d46d577f97'; //woolcock
+                url+='&response_type=code';
+                url+='&redirect_uri='+u;
+                url+='&scope=openid user.read profile'; 
+                url+='&response_mode=fragment';
+                url+='&state=exchange-microsoft-token.wimr_microsoft';
+                url+='&nonce=678910';
+                url+='&prompt=select_account';
+                window.open(url);
+            }
+            //--------------------------------------------------------
+            $vm.auth_signout=function(){
+                sessionStorage.clear();
+                window.location.href=$vm.hosting_path+"/";
+            }
+            //------------------------------------
+            window.onmessage=function(e){
+                if (e.origin == window.location.origin){
+                    var href=e.data.href;
+                    if(href==undefined) return;
+                    var code=href.split('code=').pop();
+                    code=code.split('&')[0];
+	                var state=href.split('state=exchange').pop();
+	                state="exchange"+state.split('&')[0];
+	                state=state.split('#')[0];
+                    if(code!=undefined && state!=undefined){
+                        var cmd=state.split('.')[0];
+                        var id=state.split('.').pop();
+                        $vm.request_token(id,cmd,code,u,href,function(id,res){
+                            var api_name=id.split('_')[0];
+                            $vm.user_name=sessionStorage.getItem(api_name+" username");
+                            $vm.displayname=sessionStorage.getItem(api_name+" displayname");
+                            $vm.show_user();
+                        });
+                    }
+                }
+            }
+            $vm.init(function(){
+                $vm.init_status=1;
+                var id="wimr";
+                if(sessionStorage.getItem(id+" username")!=null)     $vm.user_name=sessionStorage.getItem(id+" username");
+                if(sessionStorage.getItem(id+" displayname")!=null)  $vm.displayname=sessionStorage.getItem(id+" displayname");
+                $vm.show_user();
+            })
+            //------------------------------------
+        }
+    </script>
+</div>

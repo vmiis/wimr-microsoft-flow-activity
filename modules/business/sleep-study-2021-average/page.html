@@ -1,0 +1,97 @@
+<div id=D__ID>
+	<div id=toolbar__ID class="navbar navbar-default">
+        <div>
+            <button id=export__ID type=button class="btn btn-secondary" title='Export' style='margin-right:30px'>Export</button>
+            <span id=name__ID style='margin-right:50px'></span> Total Number of records: <span id=total__ID></span>
+        </div>
+    </div>
+    <div>
+        <table id="grid__ID"></table>
+    </div>
+    <script>
+        function F__ID(){
+            //-------------------------------------------------
+            var m=$vm.module_list['__MODULE__'];
+            //-------------------------------------------------
+            var name="Average scoring and reporting in 2021";
+            var columns=`
+                Year|Year
+                Month|Month
+                Number of Study performed|Number of Study proformed
+                Number of Study scored|Number of Study scored
+                Number of Study reported|Number of Study reported
+                Average Days of Scoring|Average Days of Scoring
+                Average Days of Reporting (from scoring)|Average Days of Repoting (from scoring)
+                Average Days of Repoting (from study)|Average Days of Repoting (from stydy)
+            `
+            //-------------------------------------------------
+            var records=[];
+            $('#D__ID').on('load',function(){
+                $vm.request({cmd:'sql',folder:'cms-sql-query',filename:'average-scoring-and-reporting-in-2021.txt',encoding:'utf8'},function(res){
+                    if(res.status=='np'){
+                        alert("No permissions.");
+                        return;
+                    }
+                    records=$vm.grid_render_1("__ID", {
+                        name:name,
+                        columns:columns,
+                        rows:res.result,
+                    })
+                })
+            })
+            //-------------------------------------------------
+            $('#export__ID').on('click',function(){
+                if(records!=[]) $vm.download_csv(name+".csv",records);
+            })
+            //-------------------------------------------------
+        }
+    </script>
+    <style>
+        #D__ID{
+            height:100%;
+            background-color:#fff;
+        }
+
+        #toolbar__ID{
+            background-color:#ccc;
+            padding:5px 10px;
+            margin-bottom:0px;
+            overflow:hidden
+        }
+        #D__ID table{
+            font-size:13px;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        #grid__ID{
+            border-collapse: collapse;
+            border-spacing: 0;
+            margin: 0;
+            border-width: 0;
+        }
+        #grid__ID th{
+            font-weight: bold;
+            background-color:#EEE;
+            padding:5px;
+            border: 1px solid #CCC;
+        }
+        #grid__ID td{
+            font-weight: 300;
+            /*background-color:#FFF;*/
+            padding:3px;
+            border: 1px solid #CCC;
+            vertical-align: top;
+            white-space: pre;
+            background-color: white;
+        }
+
+        #grid__ID tr:hover { 
+            background-color:#EEE; 
+        }        
+        
+        #grid__ID tr td:first-child{
+            padding-left:10px;
+            padding-right:10px;
+            background-color:#EEE;
+        }
+    </style>
+</div>

@@ -1,0 +1,113 @@
+<div id=D__ID>
+	<div id=toolbar__ID class="navbar navbar-default">
+	    	<div>
+				<button id=export__ID type=button class="btn btn-secondary" title='Export' style='margin-right:30px'>Export</button>
+			</div>
+    </div>
+    <div>
+        <table id="grid__ID"></table>
+    </div>
+    <script>
+        function F__ID(){
+            //-------------------------------------------------
+            var m=$vm.module_list['__MODULE__'];
+            //-------------------------------------------------
+            var name="";
+            var headers=[];
+            var ps=[];                
+            var records=[];
+            //-------------------------------------------------
+            $('#export__ID').on('click',function(){
+                if(records!=[]) $vm.download_csv(name+".csv",records);
+            })
+            //-------------------------------------------------
+            $('#D__ID').on('load',function(){
+                var json_data=m.input.json_data
+                var array=m.input.array
+                var columns=m.input.columns
+                name=m.input.name;
+                headers=['Name', 'Value'];
+                records=[];                
+                try{
+                    var array2=array.split('.');
+                    var values=json_data;
+                    for(var k=0;k<array2.length;k++){
+                        values=values[array2[k]];
+                    }
+                    var bb=[];
+                    var aa=columns.split('\n');
+                    for(var i=0;i<aa.length;i++){
+                        aa[i]=aa[i].trim();
+                        if(aa[i]!=undefined && aa[i]!="") bb.push(aa[i]);
+                    }
+                    for(var i=0;i<values.length;i++){
+                        var record={};
+                        record.Name=bb[i].replace(/\r/,'');
+                        record.Value=values[i];
+                        records.push(record);
+                    }
+                    console.log(records)
+                }
+                catch(e){
+                    alert(e);
+                    return;
+                }
+                var txt="<tr><th></th>";
+                txt+="<th>Name</th><th>Value</th>";
+                txt+="</tr>"
+                for(var i=0;i<records.length;i++){
+                    txt+="<tr><td>"+(i+1)+"</td>"
+                    txt+="<td>"+records[i].Name+"</td>"
+                    txt+="<td>"+records[i].Value+"</td>"
+                    txt+="</tr>"
+                }
+                $('#grid__ID').html(txt);
+            })
+            //-------------------------------------------------
+        }
+    </script>
+    <style>
+        #D__ID{
+            height:100%;
+            background-color:#fff;
+        }
+
+        #toolbar__ID{
+            background-color:#ccc;
+            padding:5px 10px;
+            margin-bottom:0px;
+            overflow:hidden
+        }
+        #D__ID table{
+            font-size:13px;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        #grid__ID{
+            border-collapse: collapse;
+            border-spacing: 0;
+            margin: 0;
+            border-width: 0;
+        }
+        #grid__ID th{
+            font-weight: bold;
+            background-color:#EEE;
+            padding:5px;
+            border: 1px solid #CCC;
+        }
+        #grid__ID td{
+            font-weight: 300;
+            background-color:#FFF;
+            padding:3px;
+            border: 1px solid #CCC;
+            vertical-align: top;
+            white-space: pre;
+        }
+        #grid__ID tr td:first-child{
+            padding-left:10px;
+            padding-right:10px;
+            background-color:#EEE;
+        }
+
+
+    </style>
+</div>

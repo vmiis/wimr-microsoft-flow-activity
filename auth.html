@@ -1,0 +1,9 @@
+<script>
+	var u=window.location.href;
+	var c=u.split('code=').pop();
+	c=c.split('&')[0];
+	var s=u.split('?state=').pop().split('&state=').pop();
+	s=s.split('&')[0].split('#')[0];
+	window.opener.postMessage({cmd:s,code:c,href:u}, window.location.origin);
+	window.close();
+</script>
