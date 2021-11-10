@@ -1,0 +1,26 @@
+<section>
+    VmInclude:__COMPONENT__/g/grid.01.html
+</section>
+<script>
+    function F__ID(){
+        //-------------------------------------
+        //VmInclude:__COMPONENT__/g/grid.01.js
+        var fields=
+        `Flow Name|I1
+        `;
+        m.fields="_Form,"+fields+",Submit_date,Submitted_by";
+        //-------------------------------------
+        $('#new__ID').hide();
+        $('#import__ID').hide();
+        $('#export__ID').hide();
+        //-------------------------------------
+        m.query={"I1":"Snapforms Sleep Registration"};
+        //m.load=function(){
+
+        //}
+        //-------------------------------------
+    }
+</script>
+<style>
+    VmInclude:__COMPONENT__/g/grid.01.css
+</style>
