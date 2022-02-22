@@ -14,10 +14,17 @@
         $('#import__ID').hide();
         $('#export__ID').hide();
         //-------------------------------------
+        var dt1=$vm.date_to_yyyymmdd(new Date());
+        console.log(dt1);
+        m.query={ "Submit_date": {$gte: "ISODate('"+$vm.date_today()+"')"}}
+
+
+        /*{Submit_date:{"$gte":"2022-02-18"}};*/
+
         m.cell_render=function(records,I,field,td){
             switch(field){
                 case 'Submit_time':
-                    td.text(records[I]["Submit_date"].substring(11,19));
+                    td.text(new Date(records[I]["Submit_date"]).toLocaleTimeString());
                     break;
             }
         }
@@ -29,5 +36,5 @@
     }
 </script>
 <style>
-    VmInclude:__COMPONENT__/g/grid.01.css
+    /*VmInclude:__COMPONENT__/g/grid.01.css*/
 </style>
