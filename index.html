@@ -171,9 +171,11 @@
             $vm.install=function(){
                 //---------------------------------------------
                 $vm.init();
-                $vm.load_component('header','header',{});
+                $vm.load_component('header','header',{},function(name,id){
+                    $vm.install_module('auth','',{},function(name,id){});
+                });
                 $vm.load_component('footer','footer',{});
-                $vm.install_module('auth','',{},function(name,id){});
+                //$vm.install_module('auth','',{},function(name,id){});
                 $vm.install_module('token','',{},function(name,id){});
                 $vm.install_module('query','',{},function(name,id){});
                 $vm.install_module('vmext','',{},function(name,id){});
